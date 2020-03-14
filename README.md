@@ -181,7 +181,7 @@ In this procedure both, the PICC as  well as the reader device, show in an  encr
 
 You can download the apk from here: [https://github.com/CRTM-NFC/Mifare-Desfire/blob/master/App/app-debug.apk](https://github.com/CRTM-NFC/Mifare-Desfire/blob/master/App/app-debug.apk)
 
-<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/appdebug0.jpg" heigth=700> <img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/appdebug1.jpg" heigth=700>
+<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/appdebug0.jpg" width=300> <img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/appdebug1.jpg" width=300>
 
 
 ## Authors
