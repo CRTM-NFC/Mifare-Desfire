@@ -168,6 +168,8 @@ CMD=AF402AF9127495F99F60783D3337234B0C
 
 In this procedure both, the PICC as  well as the reader device, show in an  encrypted  way that they posses the same secret  which especially means the same key. This procedure not only confirms that both entities can trust each other but also generates a session key which can be used to keep the further communication path  secure.  As  the  name  “session  key”  implicitly  indicates,  each  time  a  new  authentication  procedure is successfully completed a new key for further cryptographic operations is obtained. [3]
 
+<img src="https://github.com/mgp25/CRTM/blob/master/Assets/authentication.png">
+
 
 ### Side channel attacks
 
