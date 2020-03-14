@@ -8,9 +8,10 @@ A research on how Metro de Madrid NFC cards works.
 	- [PDU status values](#pdu-status-values)
 	- [Endpoints](#endpoints)
 		- [Create a session](#create-a-session)
-	- [Security](#security)
-		- [Authentication](#authentication)
-		- [Side channel attacks](#side-channel-attacks)  
+- [Security](#security)
+	- [Authentication](#authentication)
+	- [Side channel attacks](#side-channel-attacks)
+- [Custom APK for debugging NFC communication](#custom-apk-for-debugging-nfc-communication)
 
 ## NFC Card and http requests
 
@@ -175,6 +176,19 @@ In this procedure both, the PICC as  well as the reader device, show in an  encr
 
 **There is no available information wether someone has achieved  a side channel attack on the MIFARE DESFire EV1 (MF3ICD41)**. However, there was an study made on the MF3ICD40 which was vulnerable using differencial power analysis to leak partial key information and used a template to crack the key [4] [5].
 
+
+## Custom APK for debugging NFC communication
+
+You can download the apk from here: [https://github.com/CRTM-NFC/Mifare-Desfire/blob/master/App/app-debug.apk](https://github.com/CRTM-NFC/Mifare-Desfire/blob/master/App/app-debug.apk)
+
+<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/appdebug0.jpg" heigth=700> <img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/appdebug1.jpg" heigth=700>
+
+
+## Authors
+
+- [un1k0n](https://github.com/un1k0n)
+- [offk0rs](https://github.com/offk0rs)
+- And myself, [mgp25](https://github.com/mgp25)
 
 
 ## References
