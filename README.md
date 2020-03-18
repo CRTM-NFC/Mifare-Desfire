@@ -2,22 +2,252 @@
 
 A research on how Metro de Madrid NFC cards works.
 
-- [NFC Card and http requests](#nfc-card-and-http-requests)
+- [NFC Card info](#nfc-card-info)
 	- [Card type](#card-type)
+	- [Application list](#application-list)
+	- [Files](#files)
+- [Communication](#communication)
+	- [Init connection](#init-connection)
+	- [Check balance](#check-balance)
 	- [Constants](#constants)
 	- [PDU status values](#pdu-status-values)
-	- [Endpoints](#endpoints)
-		- [Create a session](#create-a-session)
-- [Security](#security)
-	- [Authentication](#authentication)
+- [App](#app)
+	- [Constants](#constants)
+	- [Network status values](#network-status-values)
+- [Server](#server)
+	- [Status codes](#status-codes)
+	- [Endpoints](#endpoints) 
+- [Security researchs](#security-researchs)
 	- [Side channel attacks](#side-channel-attacks)
 - [Custom APK for debugging NFC communication](#custom-apk-for-debugging-nfc-communication)
 
-## NFC Card and http requests
+## NFC Card info
 
 ### Card type
 
 - Mifare DESfire EV1 (MF3ICD41 [1]) [2] 
+
+### Application list
+
+Each application can have up to 14 keys.
+
+
+- AID: `0x00` (PICC). 1 access key (master key).
+	- Key `0x00`. Version: `7b`
+- AID: `0x01`. 6 access keys.
+	- Key `0x00`. Version `7e`
+	- Key `0x01`. Version `ffffffc5`
+	- Key `0x02`. Version `18`
+	- Key `0x03`. Version `70`
+	- Key `0x04`. Version `ffffff8b`
+	- Key `0x05`. Version `ffffffc6`
+
+### Files
+
+- AID: `0x01`
+	- File `0x00`. Backup file.
+	- File `0x01`. Backup file.
+	- File `0x02`. Backup file.
+	- File `0x03`. Backup file.	 
+	- File `0x04`. Backup file.	 
+	- File `0x05`. Backup file.	 
+	- File `0x06`. Backup file.	 
+	- File `0x07`. Backup file.	 
+	- File `0x08`. Standard file.	 
+	- File `0x09`. Standard file.
+	- File `0x0A`. Standard file.	 
+	- File `0x0B`. Standard file.	 
+	 
+
+## Communication
+
+<img src="https://github.com/mgp25/CRTM/blob/master/Assets/communications.png">
+
+### Init connection
+
+**Description:** This requests generates a new session that is set as a Cookie with `JSESSIONID`. Some information related to our device and timezone is being sent in the POST, however what will identify us is `uuid`.
+
+**Request:**
+
+```json
+POST /middlelat/midd/device/init/conn HTTP/1.1
+Content-Type: application/json; charset=UTF-8
+Content-Length: 620
+Host: lat1p.crtm.es:39480
+Connection: close
+Accept-Encoding: gzip, deflate
+User-Agent: okhttp/3.12.1
+
+{"board":"MSM8974","bootLoader":"unknown","brand":"oneplus","build":"MTC20F","device":"A0001","display":"MTC20F test-keys","fingerprint":"oneplus/bacon/A0001:6.0.1/MMB29X/ZNH0EAS2JK:user/release-keys","hardware":"bacon","initAt":"Wed Jan 29 21:23:15 GMT+01:00 2020","language":"en","macAddress":"02:00:00:00:00:00","manufacture":"OnePlus","model":"A0001","networkType":0,"osName":"LOLLIPOP_MR1","osVersion":"6.0.1","product":"bacon","radio":"unknown","screenResolution":"1080x1920","serial":"1a5e4ecc","time":0,"timezone":"Europe/Madrid","uuid":"e626f4c4-34aa-4ca2-bf2b-3c8e0e5e7d26b1f3ee2f-6bdc-49f4-af27-f40218c3e3d1"}
+```
+
+**Response:**
+
+```
+HTTP/1.1 200 OK
+Date: Fri, 31 Jan 2020 00:50:01 GMT
+Server: Apache/2.2.3 (CentOS)
+Set-Cookie: JSESSIONID=0C1B6566468F2B2A1E382371832C2860.worker2; Path=/middlelat; Secure; HttpOnly
+Content-Length: 72
+Connection: close
+Content-Type: text/plain;charset=UTF-8
+
+e626f4c4-34aa-4ca2-bf2b-3c8e0e5e7d26b1f3ee2f-6bdc-49f4-af27-f40218c3e3d1
+```
+
+### Check balance
+
+#### GetVersion (0x60)
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgUENEXG4gICAgcGFydGljaXBhbnQgUElDQ1xuICAgIFBDRC0-PlBJQ0M6IDYwXG4gICAgUElDQy0-PlBDRDogQUYwNDAxMDEwMTAwMTgwNVxuICAgIFBDRC0-PlBJQ0M6IEFGXG4gICAgUElDQy0-PlBDRDogQUYwNDAxMDEwMTA0MTgwNVxuICAgIFBDRC0-PlBJQ0M6IEFGXG4gICAgUElDQy0-PlBDRDogMDAwNDgwMkExQUEzNUI4MEI5MEMxNzUxOTA0OTE3IiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)
+
+First frame: `AF04010101001805`
+
+| Status | Vendor ID | Type | Subtype | Major Version | Minor Version | Storage Size | Protocol |
+|--------|-----------|------|---------|---------------|---------------|--------------|----------|
+| AF     | 04        | 01   | 01      | 01            | 00            | 18           | 05       |
+
+- Vendor ID: `0x04` for PHILIPS
+- Storage size: `0x18` = 4096 bytes
+- Protocol: `0x05` for ISO 14443-2 and -3
+
+Second frame: `AF04010101041805`
+
+| Status | Vendor ID | Type | Subtype | Major Version | Minor Version | Storage Size | Protocol |
+|--------|-----------|------|---------|---------------|---------------|--------------|----------|
+| AF     | 04        | 01   | 01      | 01            | 04            | 18           | 05       |
+
+- Vendor ID: `0x04` for PHILIPS
+- Storage size: `0x18` = 4096 bytes
+- Protocol: `0x05` for ISO 14443-3 and -4
+
+Third frame: `0004802A1AA35B80B90C1751904917`
+
+| Status | UID            | Batch no   | cw prod | prod year |
+|--------|----------------|------------|---------|-----------|
+| 00     | 04802A1AA35B80 | B90C175190 | 49      | 17        |
+
+- UID: 04802A1AA35B80
+- Batch No: B90C175190
+- Calendar week: 49 (Dec 4. 2017)
+- Year: 2017
+
+### Select application (0x5a)
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgUENEXG4gICAgcGFydGljaXBhbnQgUElDQ1xuICAgIFBDRC0-PlBJQ0M6IDVBMDAwMDAxXG4gICAgUElDQy0-PlBDRDogMDAiLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+
+| CMD | AID     |
+|-----|---------|
+| 5A  | 0000001 |
+
+### Authenticate (0x0A)
+
+It authenticates with `0x02` key.
+
+
+In this procedure both, the PICC as  well as the reader device, show in an  encrypted  way that they posses the same secret  which especially means the same key. This procedure not only confirms that both entities can trust each other but also generates a session key which can be used to keep the further communication path  secure.  As  the  name  “session  key”  implicitly  indicates,  each  time  a  new  authentication  procedure is successfully completed a new key for further cryptographic operations is obtained. [3]
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgUENEXG4gICAgcGFydGljaXBhbnQgUElDQ1xuICAgIFBDRC0-PlBJQ0M6IDBBMDJcbiAgICBQSUNDLT4-UENEOiBBRjM4Q0VGNUY1RjY2QjBGQ0NcbiAgICBQQ0QtPj5QSUNDOiBBRjJCOEQ0QzJFODk5MDI0MTI4OTQ0ODI3QUZENDJDOUFDXG4gICAgUElDQy0-PlBDRDogMDA5MUNCQ0MxMTU3QTI4QzhBXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+
+<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/authentication.png">
+
+
+### ReadData (0xBD)
+
+Files read:
+
+- `0x00`
+- `0x01`
+- `0x02`
+- `0x03`
+- `0x04`
+- `0x05`
+- `0x06`
+- `0x07`
+- `0x08`
+- `0x09`
+- `0x0A`
+
+<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/readdata">
+
+### Authentication (0x0A)
+
+Authentication is performed again with `0x01` key.
+
+### ReadData (0xBD)
+
+Now it reads file `0x0B`
+
+### Update (communication finished)
+
+**Request:** 
+
+```
+GET /middlelat/device/front/Update HTTP/1.1
+Cookie: JSESSIONID=9ED8374295193A72D1FD4954A1D83C89.worker5; Path=/middlelat; Secure; HttpOnly
+Host: lat1p.crtm.es:39480
+Connection: close
+Accept-Encoding: gzip, deflate
+User-Agent: okhttp/3.12.1
+```
+
+**Response:**
+
+```
+HTTP/1.1 200 OK
+Date: Mon, 16 Mar 2020 11:41:04 GMT
+Server: Apache/2.2.3 (CentOS)
+Content-Length: 11
+Connection: close
+Content-Type: text/plain;charset=UTF-8
+
+STATUS=00
+```
+
+### Show balance
+
+```
+GET /middlelat/device/front/MuestraSaldo HTTP/1.1
+Cookie: JSESSIONID=9ED8374295193A72D1FD4954A1D83C89.worker5; Path=/middlelat; Secure; HttpOnly
+Host: lat1p.crtm.es:39480
+Connection: close
+Accept-Encoding: gzip, deflate
+User-Agent: okhttp/3.12.1
+```
+
+```
+HTTP/1.1 200 OK
+Date: Mon, 16 Mar 2020 11:41:04 GMT
+Server: Apache/2.2.3 (CentOS)
+Content-Length: 304
+Connection: close
+Content-Type: text/plain;charset=UTF-8
+
+STATUS=00
+NOW=16-03-2020
+LOTE=MB
+SNLOTE=06677651
+NUM=04802A1AA35B80
+TTARJETA=04
+FIV=29-11-2018
+FFV=29-11-2028
+APPBLK=false
+P1N=Normal
+P1ID=01
+P1FI=29-11-2018
+P1FF=29-11-2028
+P2N=Anonimo
+P2ID=09
+P2FI=29-11-2018
+P2FF=29-11-2028
+P3N=Turistico Normal
+P3ID=0B
+P3FI=29-11-2018
+P3FF=29-11-2028
+NumWarningMsg=0
+```
+
+## App
 
 ### Constants
 
@@ -65,7 +295,9 @@ A research on how Metro de Madrid NFC cards works.
 More network codes on class: `com.sgcr.vo`.
         
         
-### PDU status values
+## Server 
+
+## Status codes
 
 | Status  | Value  |
 |---|---|
@@ -92,49 +324,10 @@ More network codes on class: `com.sgcr.vo`.
 
 Within the HTTP requests, `CMD` parameter is used to indicate next command to send to the NFC card, the response obtained from the NFC card is then sent it back to the server via GET request.
 
-<img src="https://github.com/mgp25/CRTM/blob/master/Assets/communications.png">
-
-### Endpoints
-
-#### Create a session
-
-**Description:** This requests generates a new session that is set as a Cookie with `JSESSIONID`. Some information related to our device and timezone is being sent in the POST, however what will identify us is `uuid`.
-
-**Request:**
-
-- Host: `lat1p.crtm.es:39480`
-- Endpoint: `/middlelat/midd/device/init/conn`
-
-**Request:**
-
-```json
-POST /middlelat/midd/device/init/conn HTTP/1.1
-Content-Type: application/json; charset=UTF-8
-Content-Length: 620
-Host: lat1p.crtm.es:39480
-Connection: close
-Accept-Encoding: gzip, deflate
-User-Agent: okhttp/3.12.1
-
-{"board":"MSM8974","bootLoader":"unknown","brand":"oneplus","build":"MTC20F","device":"A0001","display":"MTC20F test-keys","fingerprint":"oneplus/bacon/A0001:6.0.1/MMB29X/ZNH0EAS2JK:user/release-keys","hardware":"bacon","initAt":"Wed Jan 29 21:23:15 GMT+01:00 2020","language":"en","macAddress":"02:00:00:00:00:00","manufacture":"OnePlus","model":"A0001","networkType":0,"osName":"LOLLIPOP_MR1","osVersion":"6.0.1","product":"bacon","radio":"unknown","screenResolution":"1080x1920","serial":"1a5e4ecc","time":0,"timezone":"Europe/Madrid","uuid":"e626f4c4-34aa-4ca2-bf2b-3c8e0e5e7d26b1f3ee2f-6bdc-49f4-af27-f40218c3e3d1"}
-```
-
-**Response:**
-
-```
-HTTP/1.1 200 OK
-Date: Fri, 31 Jan 2020 00:50:01 GMT
-Server: Apache/2.2.3 (CentOS)
-Set-Cookie: JSESSIONID=0C1B6566468F2B2A1E382371832C2860.worker2; Path=/middlelat; Secure; HttpOnly
-Content-Length: 72
-Connection: close
-Content-Type: text/plain;charset=UTF-8
-
-e626f4c4-34aa-4ca2-bf2b-3c8e0e5e7d26b1f3ee2f-6bdc-49f4-af27-f40218c3e3d1
-```
 
 - Generate NFC command: `/middlelat/device/front/GeneraComando?respuesta=<VALUE>`
 
+## Endpoints
 
 #### Generate command
 
@@ -163,14 +356,7 @@ STATUS=AF
 CMD=AF402AF9127495F99F60783D3337234B0C
 ```
 
-## Security
-
-### Authentication
-
-In this procedure both, the PICC as  well as the reader device, show in an  encrypted  way that they posses the same secret  which especially means the same key. This procedure not only confirms that both entities can trust each other but also generates a session key which can be used to keep the further communication path  secure.  As  the  name  “session  key”  implicitly  indicates,  each  time  a  new  authentication  procedure is successfully completed a new key for further cryptographic operations is obtained. [3]
-
-<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/authentication.png">
-
+## Security researchs
 
 ### Side channel attacks
 
