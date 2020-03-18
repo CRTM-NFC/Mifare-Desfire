@@ -168,7 +168,7 @@ Files read:
 - `0x09`
 - `0x0A`
 
-<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/readdata">
+<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/readdata.png">
 
 ### Authentication (0x0A)
 
