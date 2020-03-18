@@ -61,7 +61,7 @@ Each application can have up to 14 keys.
 
 ## Communication
 
-<img src="https://github.com/mgp25/CRTM/blob/master/Assets/communications.png">
+<img src="https://raw.githubusercontent.com/CRTM-NFC/Mifare-Desfire/master/Assets/communications.png">
 
 ### Init connection
 
